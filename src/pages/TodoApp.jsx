@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Input, Button, Table, Checkbox, message, Modal } from 'antd';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { message, Button, Checkbox, Table, Input } from 'antd'; // Ant Design components
 import Sidebar from '../Components/Sidebar';
-import 'antd/dist/reset.css';
 
 const TodoApp = () => {
     const [taskName, setTaskName] = useState('');
@@ -11,58 +11,117 @@ const TodoApp = () => {
     const [editTask, setEditTask] = useState(null);
     const [filter, setFilter] = useState('All');
 
-    const handleAddTask = () => {
+    // Fetch tasks from the backend
+    const fetchTasks = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/tasks');
+            setTasks(response.data);
+        } catch (error) {
+            message.error('Failed to fetch tasks');
+            console.error('Error fetching tasks:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchTasks();
+    }, []);
+
+    // Handle adding a task (POST request)
+    const handleAddTask = async () => {
         if (taskName && startDate && endDate) {
             const newTask = {
-                id: tasks.length + 1,
-                name: taskName,
-                startDate,
-                endDate,
+                task_name: taskName,
+                start_date: startDate,
+                end_date: endDate,
                 status: 'Pending',
             };
-            setTasks([...tasks, newTask]);
-            setTaskName('');
-            setStartDate('');
-            setEndDate('');
-            message.success('Task berhasil ditambahkan');
+            try {
+                const response = await axios.post('http://localhost:5000/tasks', newTask);
+                message.success('Task berhasil ditambahkan');
+                setTasks([...tasks, { id: response.data.taskId, ...newTask }]);
+                setTaskName('');
+                setStartDate('');
+                setEndDate('');
+            } catch (error) {
+                message.error('Error adding task');
+                console.error('Error adding task:', error);
+            }
         } else {
             message.error('Mohon masukkan task, tanggal mulai, dan tanggal akhir.');
         }
     };
 
-    const handleDeleteTask = (id) => {
-        setTasks(tasks.filter(task => task.id !== id));
-        message.success('Task berhasil dihapus');
+    // Handle deleting a task (DELETE request)
+    const handleDeleteTask = async (id) => {
+        try {
+            await axios.delete(`http://localhost:5000/tasks/${id}`);
+            setTasks(tasks.filter((task) => task.id !== id));
+            message.success('Task berhasil dihapus');
+        } catch (error) {
+            message.error('Failed to delete task');
+            console.error('Error deleting task:', error);
+        }
     };
 
-    const handleEditTask = (task) => {
-        setEditTask(task);
-    };
-
-    const handleSaveEdit = () => {
-        setTasks(tasks.map(task => (task.id === editTask.id ? editTask : task)));
-        setEditTask(null);
-        message.success('Task berhasil diedit');
+    // Handle editing a task (PUT request)
+    const handleSaveEdit = async () => {
+        try {
+            await axios.put(`http://localhost:5000/tasks/${editTask.id}`, {
+                task_name: editTask.name,
+                start_date: editTask.startDate,
+                end_date: editTask.endDate,
+                status: editTask.status,
+            });
+            setTasks(tasks.map((task) => (task.id === editTask.id ? editTask : task)));
+            setEditTask(null);
+            message.success('Task berhasil diedit');
+        } catch (error) {
+            message.error('Error updating task');
+            console.error('Error updating task:', error);
+        }
     };
 
     const handleCancelEdit = () => {
         setEditTask(null);
     };
 
-    const handleMarkComplete = (id) => {
-        setTasks(tasks.map(task => 
-            task.id === id
-            ? { ...task, status: task.status === 'Completed' ? 'Pending' : 'Completed' }
-            : task
-        ));
-        message.success('Status task berhasil diperbarui');
+    const handleMarkComplete = async (id) => {
+        const task = tasks.find((task) => task.id === id);
+        const updatedStatus = task.status === 'Completed' ? 'Pending' : 'Completed';
+
+        try {
+            await axios.put(`http://localhost:5000/tasks/${id}`, {
+                ...task,
+                status: updatedStatus,
+            });
+            setTasks(
+                tasks.map((task) =>
+                    task.id === id ? { ...task, status: updatedStatus } : task
+                )
+            );
+            message.success('Status task berhasil diperbarui');
+        } catch (error) {
+            message.error('Failed to update task status');
+            console.error('Error updating task status:', error);
+        }
+    };
+
+    // Function to handle editing a task
+    const handleEditTask = (task) => {
+        setEditTask({
+            id: task.id,
+            name: task.name,
+            startDate: task.startDate,
+            endDate: task.endDate,
+            status: task.status,
+        });
     };
 
     const getFilteredTasks = () => {
         if (filter === 'Pending') {
-            return tasks.filter(task => task.status === 'Pending');
+            return tasks.filter((task) => task.status === 'Pending');
         } else if (filter === 'Completed') {
-            return tasks.filter(task => task.status === 'Completed');
+            return tasks.filter((task) => task.status === 'Completed');
         }
         return tasks;
     };
@@ -95,8 +154,8 @@ const TodoApp = () => {
         },
         {
             title: 'Task',
-            dataIndex: 'name',
-            key: 'name',
+            dataIndex: 'task_name', // Update this
+            key: 'task_name', // Update this
             className: 'text-center',
             onCell: () => ({
                 style: { padding: '12px', border: '1px solid #ddd' },
@@ -104,8 +163,8 @@ const TodoApp = () => {
         },
         {
             title: 'Start Date',
-            dataIndex: 'startDate',
-            key: 'startDate',
+            dataIndex: 'start_date', // Update this
+            key: 'start_date', // Update this
             className: 'text-center',
             onCell: () => ({
                 style: { padding: '12px', border: '1px solid #ddd' },
@@ -113,8 +172,8 @@ const TodoApp = () => {
         },
         {
             title: 'End Date',
-            dataIndex: 'endDate',
-            key: 'endDate',
+            dataIndex: 'end_date', // Update this
+            key: 'end_date', // Update this
             className: 'text-center',
             onCell: () => ({
                 style: { padding: '12px', border: '1px solid #ddd' },
@@ -134,13 +193,21 @@ const TodoApp = () => {
             key: 'aksi',
             render: (text, record) => (
                 <div className="text-center">
-                    <Button type="primary" className="mr-2" onClick={() => handleEditTask(record)}>
+                    <Button
+                        type="primary"
+                        className="mr-2"
+                        onClick={() => handleEditTask(record)}
+                    >
                         Edit
                     </Button>
-                    <Button 
-                        type="danger" 
+                    <Button
+                        type="danger"
                         onClick={() => handleDeleteTask(record.id)}
-                        style={{ backgroundColor: '#FF4B50', borderColor: '#FF4B50', color: 'white' }} // Tambahkan warna merah
+                        style={{
+                            backgroundColor: '#FF4B50',
+                            borderColor: '#FF4B50',
+                            color: 'white',
+                        }}
                     >
                         Delete
                     </Button>
@@ -151,7 +218,7 @@ const TodoApp = () => {
                 style: { padding: '12px', border: '1px solid #ddd' },
             }),
         },
-    ];
+    ];    
 
     return (
         <div className="bg-gray-100 min-h-screen flex">
@@ -159,13 +226,17 @@ const TodoApp = () => {
             <Sidebar onFilterChange={setFilter} />
 
             {/* Main Content */}
-            <div className="flex-1 p-12 ml-64"> {/* Pastikan konten utama menggunakan seluruh layar */}
+            <div className="flex-1 p-12 ml-64">
+                {/* Ubah background menjadi putih */}
                 <div className="bg-white p-8 rounded-lg shadow-md w-full h-full">
-                    <h1 className="text-center text-2xl font-bold mb-6">HALAMAN DASHBOARD ADMIN</h1>
-                    
+                    <h1 className="text-center text-2xl font-bold mb-6">
+                        HALAMAN DASHBOARD ADMIN
+                    </h1>
+
                     {/* Ubah background menjadi putih */}
                     <div className="bg-white p-8 rounded-lg mb-8">
-                        <h2 className="text-lg font-bold mb-4 text-left">Input Todo</h2> {/* Teks dipindahkan ke kiri */}
+                        <h2 className="text-lg font-bold mb-4 text-left">Input Todo</h2>
+                        {/* Teks dipindahkan ke kiri */}
                         <div className="grid grid-cols-3 gap-4 mb-4">
                             <div>
                                 <label className="block text-sm font-medium mb-2">Task</label>
@@ -195,65 +266,28 @@ const TodoApp = () => {
                                 />
                             </div>
                         </div>
-
-                        <div className="flex justify-start">
-                            <Button type="primary" onClick={handleAddTask} className="mb-8">
-                                Proses
+                        <div className="text-left">
+                            {/* Tombol dipindahkan ke kiri */}
+                            <Button
+                                onClick={handleAddTask}
+                                type="primary"
+                                className="bg-blue-500 text-white font-bold py-2 px-4 rounded"
+                            >
+                                Tambah Task
                             </Button>
                         </div>
                     </div>
 
-                    {/* Tabel tanpa div tambahan */}
-                    <Table
-                        columns={columns}
-                        dataSource={getFilteredTasks()}
-                        rowKey="id"
-                        pagination={false}
-                        className="w-full bg-white border border-gray-300"
-                    />
-
-                    {/* Modal untuk Edit Tugas */}
-                    {editTask && (
-                        <Modal
-                            title="Edit Data"
-                            visible={true}
-                            footer={null}
-                            onCancel={handleCancelEdit}
-                            transitionName="zoom"
-                            maskTransitionName="fade"
-                        >
-                            <label className="block mb-2">Task Name</label>
-                            <Input
-                                value={editTask.name}
-                                onChange={(e) => setEditTask({ ...editTask, name: e.target.value })}
-                                className="mb-4"
-                                placeholder="Ubah Nama Task"
-                            />
-                            <label className="block mb-2">Start Date</label>
-                            <Input
-                                type="date"
-                                value={editTask.startDate}
-                                onChange={(e) => setEditTask({ ...editTask, startDate: e.target.value })}
-                                className="mb-4"
-                                placeholder="Ubah Start Date"
-                            />
-                            <label className="block mb-2">End Date</label>
-                            <Input
-                                type="date"
-                                value={editTask.endDate}
-                                onChange={(e) => setEditTask({ ...editTask, endDate: e.target.value })}
-                                placeholder="Ubah End Date"
-                            />
-                            <div className="flex space-x-2 mt-4">
-                                <Button type="primary" onClick={handleSaveEdit} style={{ backgroundColor: 'green', borderColor: 'green' }}>
-                                    Proceed
-                                </Button>
-                                <Button type="danger" onClick={handleCancelEdit} style={{ backgroundColor: 'red', borderColor: 'red' }}>
-                                    Discard
-                                </Button>
-                            </div>
-                        </Modal>
-                    )}
+                    <h2 className="text-lg font-bold mb-4 text-left">Table Todo</h2>
+                    <div className="bg-white p-8 rounded-lg">
+                        <Table
+                            columns={columns}
+                            dataSource={getFilteredTasks()}
+                            rowKey={(record) => record.id}
+                            pagination={{ pageSize: 5 }}
+                            bordered
+                        />
+                    </div>
                 </div>
             </div>
         </div>

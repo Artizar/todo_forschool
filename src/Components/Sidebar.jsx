@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Menu } from 'antd';
-import { CloseOutlined, MenuOutlined, LogoutOutlined, DownOutlined, UserOutlined, CheckCircleOutlined, ClockCircleOutlined, FileTextOutlined } from '@ant-design/icons';
-
-// Import gambar lokal dari folder src/assets
-import profileImage from '../assets/Profile.jpg';
+import { CloseOutlined, MenuOutlined, LogoutOutlined, DownOutlined, CheckCircleOutlined, ClockCircleOutlined, FileTextOutlined } from '@ant-design/icons';
 
 const Sidebar = ({ onFilterChange }) => {
     const [isSidebarVisible, setIsSidebarVisible] = useState(true);
@@ -20,7 +17,7 @@ const Sidebar = ({ onFilterChange }) => {
     return (
         <div>
             <div 
-                className={`h-screen p-6 bg-white shadow-lg w-64 fixed top-0 left-0 z-10 flex flex-col justify-between transition-transform duration-700 ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'}`} // Durasi animasi diperpanjang menjadi 700ms
+                className={`h-screen p-6 bg-white shadow-lg w-64 fixed top-0 left-0 z-10 flex flex-col justify-between transition-transform duration-700 ${isSidebarVisible ? 'translate-x-0' : '-translate-x-full'}`}
                 style={{ willChange: 'transform' }}
             >
                 <div>
@@ -88,31 +85,6 @@ const Sidebar = ({ onFilterChange }) => {
                             </Menu>
                         </div>
                     </div>
-
-                    {/* User List */}
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between cursor-pointer">
-                            <div className="flex items-center">
-                                <UserOutlined className="mr-2" style={{ fontSize: '16px' }} />
-                                <span className="text-base font-medium">Lorem Ipsum</span>
-                            </div>
-                            <DownOutlined style={{ fontSize: '12px' }} />
-                        </div>
-                        <div className="flex items-center justify-between cursor-pointer">
-                            <div className="flex items-center">
-                                <UserOutlined className="mr-2" style={{ fontSize: '16px' }} />
-                                <span className="text-base font-medium">Lorem Ipsum</span>
-                            </div>
-                            <DownOutlined style={{ fontSize: '12px' }} />
-                        </div>
-                        <div className="flex items-center justify-between cursor-pointer">
-                            <div className="flex items-center">
-                                <UserOutlined className="mr-2" style={{ fontSize: '16px' }} />
-                                <span className="text-base font-medium">Lorem Ipsum</span>
-                            </div>
-                            <DownOutlined style={{ fontSize: '12px' }} />
-                        </div>
-                    </div>
                 </div>
 
                 {/* Footer with Profile Image and Logout */}
@@ -120,7 +92,7 @@ const Sidebar = ({ onFilterChange }) => {
                     <div className="flex items-center">
                         {/* Gambar profil di samping Kennz */}
                         <img 
-                            src={profileImage}  // Menggunakan gambar lokal dari src/assets
+                            src="/public/images/Profile.jpg"  // Menggunakan gambar dari public/images
                             alt="Profile"
                             className="rounded-full h-8 w-8 mr-2 object-cover"
                         />
